@@ -1,0 +1,5 @@
+service_name = "replace-with-ovh-public-cloud-project-id"
+region       = "replace-with-approved-ovh-region"
+
+environment  = "dev"
+project_name = "scalable-cloud-infrastructure"
