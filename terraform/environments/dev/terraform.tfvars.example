@@ -1,5 +1,43 @@
-service_name = "replace-with-ovh-public-cloud-project-id"
-region       = "replace-with-approved-ovh-region"
+# =============================================================================
+# OVHcloud Development Environment - Example Values
+#
+# Copy this file to terraform.tfvars after Kevares provides the real values.
+# Do not add credentials to this file.
+# =============================================================================
 
-environment  = "dev"
 project_name = "scalable-cloud-infrastructure"
+environment  = "dev"
+
+service_name = "replace-with-ovh-public-cloud-project-id"
+region       = "replace-with-approved-region"
+
+
+# =============================================================================
+# Network Values
+# =============================================================================
+
+# This is only an example.
+# Kevares must approve the CIDR and confirm that it does not overlap
+# with any existing or planned network.
+
+subnet_cidr = "10.10.1.0/24"
+
+ip_version  = 4
+vlan_id     = null
+enable_dhcp = true
+
+dns_nameservers = []
+allocation_pools = []
+
+
+# =============================================================================
+# Security Values
+#
+# The first deployment creates the security group without public inbound rules.
+# OpenStack default outbound rules remain enabled.
+# =============================================================================
+
+delete_default_rules = false
+
+ingress_rules = {}
+egress_rules  = {}
