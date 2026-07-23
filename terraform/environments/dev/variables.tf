@@ -2,6 +2,11 @@
 # OVHcloud Development Environment - Input Variables
 # =============================================================================
 
+
+# =============================================================================
+# General Project Configuration
+# =============================================================================
+
 variable "service_name" {
   description = "OVHcloud Public Cloud project ID."
   type        = string
@@ -70,6 +75,11 @@ variable "ip_version" {
   description = "IP version used by the subnet."
   type        = number
   default     = 4
+
+  validation {
+    condition     = contains([4, 6], var.ip_version)
+    error_message = "IP version must be either 4 or 6."
+  }
 }
 
 variable "vlan_id" {
@@ -77,6 +87,15 @@ variable "vlan_id" {
   type        = number
   default     = null
   nullable    = true
+
+  validation {
+    condition = (
+      var.vlan_id == null ||
+      (var.vlan_id >= 1 && var.vlan_id <= 4094)
+    )
+
+    error_message = "VLAN ID must be null or a number between 1 and 4094."
+  }
 }
 
 variable "enable_dhcp" {
@@ -143,4 +162,125 @@ variable "egress_rules" {
   }))
 
   default = {}
+}
+
+
+# =============================================================================
+# Managed Kubernetes Configuration
+# =============================================================================
+
+variable "cluster_plan" {
+  description = "OVHcloud Managed Kubernetes service plan."
+  type        = string
+  default     = "free"
+
+  validation {
+    condition     = contains(["free", "standard"], var.cluster_plan)
+    error_message = "cluster_plan must be either free or standard using lowercase letters."
+  }
+}
+
+variable "kubernetes_version" {
+  description = "Kubernetes version used by the OVHcloud Managed Kubernetes cluster. Null allows OVHcloud to select an available version."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "node_pool_name" {
+  description = "Name of the Kubernetes worker-node pool."
+  type        = string
+  default     = "dev-pool"
+
+  validation {
+    condition = can(regex(
+      "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+      var.node_pool_name
+    ))
+
+    error_message = "Node-pool name must contain only letters, numbers, and hyphens."
+  }
+}
+
+variable "node_flavor" {
+  description = "OVHcloud instance flavor used by Kubernetes worker nodes."
+  type        = string
+  default     = "b3-8"
+
+  validation {
+    condition     = length(trimspace(var.node_flavor)) > 0
+    error_message = "Node flavor cannot be empty."
+  }
+}
+
+variable "desired_nodes" {
+  description = "Initial desired number of worker nodes."
+  type        = number
+  default     = 1
+
+  validation {
+    condition = (
+      var.desired_nodes >= 0 &&
+      floor(var.desired_nodes) == var.desired_nodes
+    )
+
+    error_message = "Desired nodes must be a non-negative whole number."
+  }
+}
+
+variable "min_nodes" {
+  description = "Minimum number of worker nodes in the node pool."
+  type        = number
+  default     = 1
+
+  validation {
+    condition = (
+      var.min_nodes >= 0 &&
+      floor(var.min_nodes) == var.min_nodes
+    )
+
+    error_message = "Minimum nodes must be a non-negative whole number."
+  }
+}
+
+variable "max_nodes" {
+  description = "Maximum number of worker nodes in the node pool."
+  type        = number
+  default     = 1
+
+  validation {
+    condition = (
+      var.max_nodes >= 0 &&
+      floor(var.max_nodes) == var.max_nodes
+    )
+
+    error_message = "Maximum nodes must be a non-negative whole number."
+  }
+}
+
+variable "node_autoscale" {
+  description = "Controls whether OVHcloud worker-node autoscaling is enabled."
+  type        = bool
+  default     = false
+}
+
+variable "monthly_billed" {
+  description = "Controls whether worker nodes use monthly billing. False uses hourly billing."
+  type        = bool
+  default     = false
+}
+
+variable "api_allowed_cidrs" {
+  description = "Public CIDR ranges authorized to access the Kubernetes API. Team public IP addresses should normally use /32."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for cidr in var.api_allowed_cidrs :
+      can(cidrhost(cidr, 0))
+    ])
+
+    error_message = "Each Kubernetes API access value must be a valid CIDR, such as 203.0.113.10/32."
+  }
 }
